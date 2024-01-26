@@ -3,7 +3,11 @@ import User from "../models/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import validateEnv from "../src/util/validateEnv";
+import env from "../src/util/validateEnv";
+
+type token = {
+  token:String
+}
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -36,7 +40,7 @@ export const signup = async (req: Request, res: Response) => {
         message: `user already exist please login `,
       });
     }
-    let hashedpassword;
+    let hashedpassword = "";
     try {
       hashedpassword = await bcrypt.hash(password, 10);
     } catch (error) {
@@ -56,26 +60,73 @@ export const signup = async (req: Request, res: Response) => {
       data: user,
     });
   } catch (error) {
-    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+    console.error(error);
+  }
+};
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: `Email is already in use. Please use a different email.`,
-      });
-    } else if (
-      error.code === 11000 &&
-      error.keyPattern &&
-      error.keyPattern.username
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: `Username is already taken. Please choose another username.`,
-      });
-    } else {
-      console.error("Unexpected error occurred:", error);
-      return res.status(400).json({
-        success: false,
-        message: `Something went wrong while signing up.`,
+        message: "Please provide both username or email and password",
       });
     }
+
+    const user = await User.findOne({
+      $or: [{ email: email }],
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User does not exist. Please check Username or Email",
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password. Please try again.",
+      });
+    }
+
+    const payload = {
+      userid: user._id,
+      email: user.email,
+      username: user.username,
+    };
+
+    const token = jwt.sign(payload, env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    user.token = token;
+
+    const options = {
+      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+    };
+
+    // Set token in a cookie
+    res.cookie("token", token, options);
+
+    // Set the token in the "Authorization" header (optional)
+    res.set("Authorization", `Bearer ${token}`);
+
+    return res.status(200).json({
+      success: true,
+      token,
+      user,
+      message: "User logged in successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Something went wrong while logging in: ${error.message}`,
+    });
   }
 };
