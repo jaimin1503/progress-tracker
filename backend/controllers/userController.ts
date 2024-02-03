@@ -6,12 +6,9 @@ import "dotenv/config";
 import env from "../src/util/validateEnv";
 import { UserType } from "../types/user";
 
-// ... (other imports)
-
 export const signup = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
-    // ... (validation checks)
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -25,16 +22,17 @@ export const signup = async (req: Request, res: Response) => {
     try {
       hashedpassword = await bcrypt.hash(password, 10);
     } catch (error) {
-      return res.status(400).json({
+      console.error("Error occurred while hashing password:", error);
+      return res.status(500).json({
         success: false,
-        message: `Error occurred while hashing password: ${error}`,
+        message: "Error occurred while hashing password",
       });
     }
 
     const user: UserType = await User.create({
       username,
       email,
-      password: hashedpassword, // Store the hashed password in the database
+      password: hashedpassword,
     });
 
     return res.status(200).json({
@@ -55,16 +53,38 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // ... (validation checks)
+    // Validation checks...
 
     const user = await User.findOne({ email });
 
-    // ... (user existence and password checks)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please check your credentials.",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid password. Please check your credentials.",
+      });
+    }
+
+    if (!env.JWT_SECRET) {
+      console.error("JWT_SECRET is not defined in the environment");
+      return res.status(500).json({
+        success: false,
+        message: "JWT_SECRET is not defined",
+      });
+    }
 
     const payload = {
-      userid: user._id,
-      email: user.email,
-      username: user.username,
+      userid: user?._id,
+      email: user?.email,
+      username: user?.username,
     };
 
     const token = jwt.sign(payload, env.JWT_SECRET, {
@@ -74,12 +94,10 @@ export const login = async (req: Request, res: Response) => {
     const options = {
       expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
     };
 
-    // Set token in a cookie
     res.cookie("authToken", token, options);
-
-    // Set the token in the "Authorization" header (optional)
     res.set("Authorization", `Bearer ${token}`);
 
     return res.status(200).json({
