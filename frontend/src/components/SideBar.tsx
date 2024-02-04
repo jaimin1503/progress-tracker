@@ -4,8 +4,9 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { isOpenState } from "../atoms/todoAtom";
 
 const SideBar = () => {
-  const [isOpen, setIsOpen] = useRecoilState(isOpenState);
-  const handleComponentClick = (componentName) => {
+  const [isOpen, setIsOpen] = useRecoilState(isOpenState); // Assuming isOpenState is of type string
+
+  const handleComponentClick = (componentName:(string | any)) => {
     setIsOpen(componentName);
   };
 
