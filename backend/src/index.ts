@@ -3,12 +3,23 @@ import "dotenv/config";
 import env from "./util/validateEnv";
 import mongoose from "mongoose";
 import userRoutes from "../routes/userRoutes";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const app = express();
 const port = env.PORT | 3000;
 
-app.use("/user", userRoutes);
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
+app.use("/user", userRoutes);
 app.get("/", (req, res) => {
   res.send("Hello world");
 });

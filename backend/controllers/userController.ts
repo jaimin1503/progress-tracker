@@ -51,53 +51,59 @@ export const signup = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    // Validation checks...
+    if (!identifier || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both username or email and password",
+      });
+    }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found. Please check your credentials.",
+        message: "User does not exist. Please check Username or Email",
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordValid) {
+    if (!passwordMatch) {
       return res.status(401).json({
         success: false,
-        message: "Invalid password. Please check your credentials.",
-      });
-    }
-
-    if (!env.JWT_SECRET) {
-      console.error("JWT_SECRET is not defined in the environment");
-      return res.status(500).json({
-        success: false,
-        message: "JWT_SECRET is not defined",
+        message: "Invalid email or password. Please try again.",
       });
     }
 
     const payload = {
-      userid: user?._id,
-      email: user?.email,
-      username: user?.username,
+      userid: user._id,
+      email: user.email,
+      username: user.username,
     };
 
-    const token = jwt.sign(payload, env.JWT_SECRET, {
+    const secret: string | object | undefined = process.env.JWT_SECRET;
+
+    const token = jwt.sign(payload, secret!, {
       expiresIn: "30d",
     });
+
+    // user.token = token;
+    user.password = "";
 
     const options = {
       expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
     };
 
-    res.cookie("authToken", token, options);
+    // Set token in a cookie
+    res.cookie("token", token, options);
+
+    // Set the token in the "Authorization" header (optional)
     res.set("Authorization", `Bearer ${token}`);
 
     return res.status(200).json({
@@ -107,10 +113,9 @@ export const login = async (req: Request, res: Response) => {
       message: "User logged in successfully",
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong while logging in",
+      message: `Something went wrong while logging in: ${error}`,
     });
   }
 };
