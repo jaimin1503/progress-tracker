@@ -11,7 +11,7 @@ interface User {
 }
 
 // Extend the Request type to include the 'user' property
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 

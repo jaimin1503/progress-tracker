@@ -3,10 +3,11 @@ import User from "../models/user";
 import { Request, Response } from "express";
 import { UserType } from "../types/user";
 import { TodoType, TaskType } from "../types/todo";
+import { AuthenticatedRequest } from "../middleware/auth";
 
-export const newTodo = async (req: Request, res: Response) => {
+export const newTodo = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId: string = req.user?.userid;
+    const userId = req.user?.userid;
     const { title, tasks } = req.body;
 
     if (!(userId && title && tasks)) {
@@ -69,15 +70,13 @@ export const deleteTodo = async (req: Request, res: Response) => {
 };
 
 export const editTodo = async (req: Request, res: Response) => {
+  type EditTodo = Partial<TodoType>;
   const id = req.params.todoid;
   try {
     const { title, tasks }: { title?: string; tasks?: TaskType[] } = req.body;
     const todo = await Todo.findById(id);
     if (todo) {
-      const newTodo: { title?: string; tasks?: TaskType[] } = {
-        title: undefined,
-        tasks: undefined,
-      };
+      const newTodo: EditTodo = {};
       if (title) {
         newTodo.title = title;
       }
@@ -107,9 +106,9 @@ export const editTodo = async (req: Request, res: Response) => {
   }
 };
 
-export const getTodos = async (req: Request, res: Response) => {
+export const getTodos = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId: string = req.user.userid;
+    const userId = req?.user?.userid;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -138,7 +137,6 @@ export const getTodos = async (req: Request, res: Response) => {
       success: true,
       message: "All todos fetched successfully.",
       todos: user.todos,
-      tasks: user.todos?.tasks,
     });
   } catch (error) {
     return res.status(500).json({
@@ -159,7 +157,7 @@ export const editTask = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Todo not found" });
     }
 
-    const task: TaskType = todo.tasks?.id(taskId);
+    const task = todo.tasks.id(taskId);
 
     if (!task) {
       return res
