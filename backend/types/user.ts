@@ -1,7 +1,10 @@
 import { Document } from "mongoose";
+import { TodoType } from "./todo";
 
 export interface UserType extends Document {
-	username:string,
-	email:string,
-	password:string
+  _id: string;
+  username: string;
+  email: string;
+  password: string;
+  todos: TodoType[];
 }

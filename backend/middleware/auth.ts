@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 
 interface User {
+  userid: string;
   username: string;
   email: string;
   password: string;
@@ -14,7 +15,11 @@ interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-export const auth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const auth = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const token = req.body.token || req.cookies.token;
     if (!token) {
