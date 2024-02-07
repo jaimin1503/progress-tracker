@@ -3,6 +3,7 @@ import "dotenv/config";
 import env from "./util/validateEnv";
 import mongoose from "mongoose";
 import userRoutes from "../routes/userRoutes";
+import goalRoutes from "../routes/goalRoutes";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -20,6 +21,7 @@ app.use(
 );
 
 app.use("/user", userRoutes);
+app.use("/goal", goalRoutes);
 app.get("/", (req, res) => {
   res.send("Hello world");
 });
