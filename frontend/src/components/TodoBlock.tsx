@@ -30,7 +30,7 @@ const TodoBlock = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5555/user/gettodos", { withCredentials: true })
+      .get("http://localhost:3000/user/gettodos", { withCredentials: true })
       .then((res) => {
         setTodos(res.data.todos);
       })
@@ -47,7 +47,7 @@ const TodoBlock = () => {
     if (event.key === "Enter") {
       axios
         .put(
-          `http://localhost:5555/user/todos/${todo_id}/tasks/${task_id}`,
+          `http://localhost:3000/user/todos/${todo_id}/tasks/${task_id}`,
           { todos },
           { withCredentials: true }
         )

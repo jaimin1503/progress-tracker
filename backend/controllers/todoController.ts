@@ -69,8 +69,8 @@ export const deleteTodo = async (req: Request, res: Response) => {
   }
 };
 
+type EditTodo = Partial<TodoType>;
 export const editTodo = async (req: Request, res: Response) => {
-  type EditTodo = Partial<TodoType>;
   const id = req.params.todoid;
   try {
     const { title, tasks }: { title?: string; tasks?: TaskType[] } = req.body;
@@ -121,7 +121,7 @@ export const getTodos = async (req: AuthenticatedRequest, res: Response) => {
         path: "todos",
         model: "Todo",
         populate: {
-          path: "tasks",
+          path: "tasks", // Ensure this path matches the field name in the Todo schema
           model: "Task",
         },
       })
@@ -151,13 +151,13 @@ export const editTask = async (req: Request, res: Response) => {
   const { content, done }: { content?: string; done?: boolean } = req.body; // Extract updated content and done status from the request body
 
   try {
-    const todo = await Todo.findById(todoId);
+    const todo: TodoType | null = await Todo.findById(todoId);
 
     if (!todo) {
       return res.status(404).json({ message: "Todo not found" });
     }
 
-    const task = todo.tasks.id(taskId);
+    const task = todo.tasks.find((task) => task._id === taskId);
 
     if (!task) {
       return res
