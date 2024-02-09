@@ -29,7 +29,7 @@ export const signup = async (req: Request, res: Response) => {
       });
     }
 
-    const user: UserType = await User.create({
+    const user = await User.create({
       username,
       email,
       password: hashedpassword,

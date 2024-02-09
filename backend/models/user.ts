@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, InferSchemaType } from "mongoose";
 import { UserType } from "../types/user";
 
 const userSchema = new Schema({
@@ -7,4 +7,6 @@ const userSchema = new Schema({
   password: { type: String, required: true },
 });
 
-export default model<UserType>("User", userSchema);
+type User = InferSchemaType<typeof userSchema>;
+
+export default model<User>("User", userSchema);

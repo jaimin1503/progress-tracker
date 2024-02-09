@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { TaskType, TodoType } from "../types/todo";
-import { Schema, model } from "mongoose";
+import { Schema, model, InferSchemaType } from "mongoose";
 
-const taskSchema = new mongoose.Schema({
+const taskSchema = new Schema({
   content: {
     type: String,
     required: true,
@@ -13,7 +13,7 @@ const taskSchema = new mongoose.Schema({
   },
 });
 
-const todoSchema = new mongoose.Schema(
+const todoSchema = new Schema(
   {
     title: {
       type: String,
@@ -24,4 +24,6 @@ const todoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default model<TodoType>("Todo", todoSchema);
+type Todo = InferSchemaType<typeof todoSchema>;
+
+export default model<Todo>("Todo", todoSchema);

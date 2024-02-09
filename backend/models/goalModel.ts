@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { GoalType } from "../types/goal";
-import { model } from "mongoose";
+import { model, InferSchemaType, Schema } from "mongoose";
 
-const topicSchema = new mongoose.Schema({
+const topicSchema = new Schema({
   title: {
     type: String,
     trim: true,
@@ -15,7 +15,7 @@ const topicSchema = new mongoose.Schema({
   },
 });
 
-const subjectSchema = new mongoose.Schema({
+const subjectSchema = new Schema({
   title: {
     type: String,
     trim: true,
@@ -29,7 +29,7 @@ const subjectSchema = new mongoose.Schema({
   topics: [topicSchema],
 });
 
-const goalSchema = new mongoose.Schema({
+const goalSchema = new Schema({
   title: {
     type: String,
     trim: true,
@@ -43,4 +43,6 @@ const goalSchema = new mongoose.Schema({
   },
 });
 
-export default model<GoalType>("Goal", goalSchema);
+type Goal = InferSchemaType<typeof goalSchema>;
+
+export default model<Goal>("Goal", goalSchema);
