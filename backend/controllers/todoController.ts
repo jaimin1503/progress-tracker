@@ -1,4 +1,4 @@
-import Todo from "../models/todoModel";
+import { Todo, Task } from "../models/todoModel";
 import User from "../models/user";
 import { Request, Response } from "express";
 import { UserType } from "../types/user";
@@ -70,6 +70,7 @@ export const deleteTodo = async (req: Request, res: Response) => {
 };
 
 type EditTodo = Partial<TodoType>;
+
 export const editTodo = async (req: Request, res: Response) => {
   const id = req.params.todoid;
   try {
@@ -176,5 +177,69 @@ export const editTask = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const newTask = async (req: Request, res: Response) => {
+  try {
+    const { todoid } = req.params;
+    if (!todoid) {
+      return res.status(400).json({
+        success: false,
+        message: "Todoid not found",
+      });
+    } else {
+      const task = await Task.create({
+        content: "",
+        done: false,
+      });
+      await Todo.findByIdAndUpdate(
+        { _id: todoid },
+        { $push: { tasks: task } },
+        { new: true }
+      );
+      return res.status(200).json({
+        success: true,
+        message: "task created successfully ",
+        task,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `somethin went wrong while adding task and error is ${error}`,
+    });
+  }
+};
+
+export const deleteTask = async (req: Request, res: Response) => {
+  const { todoid, taskId } = req.params;
+
+  try {
+    // Find the todo by ID
+    const todo = await Todo.findById(todoid);
+
+    if (!todo) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+
+    // Find the task inside the todo
+    await Task.findByIdAndDelete(taskId);
+
+    await Todo.findByIdAndUpdate(
+      { _id: todoid },
+      { $pull: { tasks: { _id: taskId } } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Task is deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Something went wrong while deleting task and error is ${error}`,
+    });
   }
 };

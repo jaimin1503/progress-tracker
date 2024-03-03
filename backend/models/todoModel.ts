@@ -1,5 +1,3 @@
-import mongoose from "mongoose";
-import { TaskType, TodoType } from "../types/todo";
 import { Schema, model, InferSchemaType } from "mongoose";
 
 const taskSchema = new Schema({
@@ -25,5 +23,7 @@ const todoSchema = new Schema(
 );
 
 type Todo = InferSchemaType<typeof todoSchema>;
+type Task = InferSchemaType<typeof taskSchema>;
 
-export default model<Todo>("Todo", todoSchema);
+export const Todo = model<Todo>("Todo", todoSchema);
+export const Task = model<Task>("Task", taskSchema);
